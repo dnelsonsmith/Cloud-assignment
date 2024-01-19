@@ -42,3 +42,12 @@ Gli esercizi sono un'opportunità per mostrare le tue conoscenze e il contributo
 English Translated
 
 
+
+Explanation of key sections:
+#$(head -n 1 "$file" | grep -c -P '#!\s*\K\S+'): Checks if the file has a shebang line using a regular expression. It counts the number of matches for lines starting with #! followed by optional spaces (\s*) and captures the interpreter (\K\S+).
+
+#for i in "${!shebangs[@]}"; do ... done: Iterates through the indices of the shebangs array to check if the current shebang is already present.
+
+#((counts[$i]++)): Increments the count for the existing shebang.
+
+#shebangs+=("$shebang") and counts+=(1): If the shebang is not found in the array, it adds the shebang to the shebangs array and initializes the count to 1.
