@@ -1,0 +1,136 @@
+**Provision the Infrastructure-as-Code using the AWS Cloud formation tool
+Parameters:
+KeyName:
+Type: AWS::EC2::KeyPair::KeyName
+Description: Name of an existing EC2 KeyPair for SSH access
+DBPassword:
+Type: String
+NoEcho: true
+Description: Password for the MySQL database
+Resources:
+VPC:
+Type: AWS::EC2::VPC
+Properties:
+CidrBlock: 10.0.0.0/16
+InternetGateway:
+Type: AWS::EC2::InternetGateway
+AttachGateway:
+Type: AWS::EC2::VPCGatewayAttachment
+Properties:
+VpcId: !Ref VPC
+InternetGatewayId: !Ref InternetGateway
+PublicSubnetA:
+Type: AWS::EC2::Subnet
+Properties:
+VpcId: !Ref VPC
+CidrBlock: 10.0.1.0/24
+AvailabilityZone: us-east-1a
+PublicSubnetB:
+Type: AWS::EC2::Subnet
+Properties:
+VpcId: !Ref VPC
+CidrBlock: 10.0.2.0/24
+AvailabilityZone: us-east-1b
+RDSSecurityGroup:
+Type: AWS::EC2::SecurityGroup
+Properties:
+GroupDescription: Security group for RDS instance
+VpcId: !Ref VPC
+RDSInstance:
+Type: AWS::RDS::DBInstance
+Properties:
+DBInstanceIdentifier: WordPressDB
+AllocatedStorage: 20
+DBInstanceClass: db.t2.micro
+Engine: MySQL
+EngineVersion: 5.7
+MasterUsername: admin
+MasterUserPassword: !Ref DBPassword
+MultiAZ: true
+VPCSecurityGroups:
+- !Ref RDSSecurityGroup
+WordPressBucket:
+Type: AWS::S3::Bucket
+Properties:
+BucketName: your-wordpress-bucket
+AccessControl: Private
+LoadBalancer:
+Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+Properties:
+Subnets:
+- !Ref PublicSubnetA
+- !Ref PublicSubnetB
+SecurityGroups:
+- Fn::ImportValue: MySecurityGroupExportedValue
+Scheme: internet-facing
+LoadBalancerAttributes:
+- Key: idle_timeout.timeout_seconds
+Value: '60'
+Listener:
+Type: AWS::ElasticLoadBalancingV2::Listener
+Properties:
+DefaultActions:
+- Type: fixed-response
+FixedResponseConfig:
+ContentType: text/plain
+StatusCode: 200
+ContentType: OK
+LoadBalancerArn: !Ref LoadBalancer
+Port: 80
+Protocol: HTTP
+WordPressInstance:
+Type: AWS::EC2::Instance
+Properties:
+ImageId: ami-xxxxxxxxxxxxxxxxx # Specified WordPress AMI ID
+InstanceType: t2.micro
+KeyName: !Ref KeyName
+SubnetId: !Ref PublicSubnetA
+SecurityGroupIds:
+- Fn::ImportValue: MySecurityGroupExportedValue
+Outputs:
+WordPressURL:
+Value: !GetAtt LoadBalancer.DNSName
+Description: URL for the WordPress site
+
+EXPLANATION
+My preferred cloud service provider for this project would be Amazon Web Services (AWS),
+considering factors like scalability, robust services, and AWS's global infrastructure.
+Creating My AWS Account
+The first step will be to sign up for an AWS account, providing the necessary details and
+completing the registration process.
+Launching an EC2 Instance
+I will initiate the creation of an Elastic Compute Cloud (EC2) instance, configuring it with
+specifications suitable for hosting WordPress.
+Configuring Security Groups and Networking
+After the EC2 instance is provisioned, I will configure security groups, networking settings, and
+any required firewall rules to secure and enable proper communication.
+Installing Nginx as My Web Server
+To serve as the hosting environment, I'll install and configure Nginx, a popular web server, on
+the EC2 instance.
+Setting Up an RDS Database
+I will deploy an Amazon Relational Database Service (RDS) instance, create a new database,
+and configure user credentials for WordPress to utilize.
+Downloading and Installing WordPress on EC2
+With the server environment prepared, I'll download and install the latest version of WordPress,
+configuring it to connect with the RDS database.
+Configuring Domain and Applying SSL with ACM
+I will configure the domain settings, associating the WordPress site with a custom domain.
+Additionally, I'll set up an SSL certificate using AWS Certificate Manager (ACM) to secure the
+site.
+Customizing WordPress Settings
+Logging into the WordPress dashboard, I'll customize site settings, themes, and plugins to meet
+specific requirements.
+Implementing AWS Backup Solutions and CloudWatch Monitoring
+I'll implement regular backups using AWS Backup and set up monitoring using Amazon
+CloudWatch to ensure optimal performance.
+Scaling Resources with Auto Scaling (Optional)
+Depending on the site's growth, I may explore AWS Auto Scaling options for increased resource
+capacity.
+Final Testing on AWS Environment
+Before going live, I'll conduct thorough testing to confirm correct configurations and ensure the
+WordPress site functions seamlessly in the AWS environment.
+Updating DNS to Go Live
+The final step involves updating the DNS settings to point to the new AWS-hosted WordPress
+site, making it publicly accessible.
+
+
